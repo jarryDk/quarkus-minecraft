@@ -1,0 +1,54 @@
+# Quarkus Minecraft
+
+Great inspiration taken from https://github.com/holly-cummins/quarkus-minecraft-observability-extension
+
+## quarkus-minecraft-extension
+
+[source,bash]
+----
+mvn io.quarkus.platform:quarkus-maven-plugin:create-extension -N
+----
+
+## quarkus-minecraft-app
+
+[source,bash]
+----
+mvn io.quarkus:quarkus-maven-plugin:2.10.0.Final:create \
+    -DprojectGroupId=dk.jarry \
+    -DprojectArtifactId=quarkus-minecraft-app \
+    -DclassName="dk.jarry.minecraft.todo.boundary.ToDoResource" \
+    -Dpath="/todos"
+----
+
+## quarkus-mod
+
+### Start the Minecraft server
+
+[source,bash]
+----
+cd quarkus-mod
+./gradlew runServer
+----
+
+## Minecraft client
+
+You will need the Java edition of Minecraft. Start a multiplayer game, and connect to `http://localhost:25565`.
+
+You will need to configure the client to allow you to `alt-tab` away from the client without it pausing and bringing up
+a menu. Edit `options.txt` in
+your [minecraft folder](https://gaming.stackexchange.com/questions/15664/can-i-alt-tab-out-of-minecraft-without-the-game-auto-pausing)
+, and change `pauseOnLostFocus` to `false`.
+
+----
+pauseOnLostFocus:false
+----
+
+
+## Util
+
+.Who is blocking port 8080
+
+[source,bash]
+----
+lsof -i:8080 | grep LISTEN | awk '{print $2}'
+----
