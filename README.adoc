@@ -4,12 +4,24 @@ Great inspiration taken from https://github.com/holly-cummins/quarkus-minecraft-
 
 ## quarkus-minecraft-extension
 
+.Create the Quarkus extension from scratch
+
 [source,bash]
 ----
 mvn io.quarkus.platform:quarkus-maven-plugin:create-extension -N
 ----
 
+.Install the Quarkus extension locally
+
+[source,bash]
+----
+cd quarkus-minecraft-extension
+mvn install
+----
+
 ## quarkus-minecraft-app
+
+.Create the Quarkus app from scratch
 
 [source,bash]
 ----
@@ -18,6 +30,26 @@ mvn io.quarkus:quarkus-maven-plugin:2.10.0.Final:create \
     -DprojectArtifactId=quarkus-minecraft-app \
     -DclassName="dk.jarry.minecraft.todo.boundary.ToDoResource" \
     -Dpath="/todos"
+----
+
+.Add the extension quarkus-minecraft-extension to our Quarkus app (quarkus-minecraft-app)
+
+Add this dependency to `quarkus-minecraft-app/pom.xml`
+[source,xml]
+----
+<dependency>
+  <groupId>dk.jarry</groupId>
+  <artifactId>quarkus-minecraft-extension</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+</dependency>
+----
+
+.Start Quarkus in dev mode
+
+[source,bash]
+----
+cd quarkus-minecraft-app
+mvn compile quarkus:dev
 ----
 
 ## quarkus-mod
