@@ -49,7 +49,7 @@ Add this dependency to `quarkus-minecraft-app/pom.xml`
 [source,bash]
 ----
 cd quarkus-minecraft-app
-mvn compile quarkus:dev
+
 ----
 
 ## quarkus-mod
