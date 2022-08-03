@@ -1,0 +1,38 @@
+= Quarkus mod Kafka
+
+
+.Create topic
+
+[source,bash]
+----
+bin/kafka-topics.sh \
+    --create \
+    --topic quarkus-mod-kafka \
+    --bootstrap-server localhost:9092
+----
+
+.Discribe topic
+
+[source,bash]
+----
+bin/kafka-topics.sh \
+    --describe \
+    --topic quarkus-mod-kafka \
+    --bootstrap-server localhost:9092
+----
+
+.Read from topic
+
+[source,bash]
+----
+bin/kafka-console-consumer.sh \
+    --topic quarkus-mod-kafka \
+    --from-beginning \
+    --bootstrap-server localhost:9092
+----
+
+== Links
+
+- https://kafka.apache.org/32/javadoc/org/apache/kafka/clients/producer/KafkaProducer.html
+- https://kafka.apache.org/32/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html
+- https://github.com/confluentinc/examples/tree/7.2.1-post/clients/cloud/java/src/main/java/io/confluent/examples/clients/cloud
