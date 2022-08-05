@@ -31,8 +31,24 @@ bin/kafka-console-consumer.sh \
     --bootstrap-server localhost:9092
 ----
 
+.Modify a topic - change partitions
+
+[source,bash]
+----
+bin/kafka-topics.sh \
+    --topic quarkus-mod-kafka \
+    --alter \
+    --partitions 12 \
+    --bootstrap-server localhost:9092
+----
+
+
+
 == Links
 
 - https://kafka.apache.org/32/javadoc/org/apache/kafka/clients/producer/KafkaProducer.html
 - https://kafka.apache.org/32/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html
 - https://github.com/confluentinc/examples/tree/7.2.1-post/clients/cloud/java/src/main/java/io/confluent/examples/clients/cloud
+- https://hevodata.com/learn/kafka-replication/
+- https://medium.com/@_amanarora/replication-in-kafka-58b39e91b64e
+- https://www.confluent.io/blog/hands-free-kafka-replication-a-lesson-in-operational-simplicity/

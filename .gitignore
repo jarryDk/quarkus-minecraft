@@ -26,3 +26,8 @@ quarkus-mod/.project
 quarkus-mod/.classpath
 quarkus-mod/.settings/org.eclipse.buildship.core.prefs
 quarkus-mod/bin
+.classpath
+.project
+.settings*
+kafka-mod/bin/*
+

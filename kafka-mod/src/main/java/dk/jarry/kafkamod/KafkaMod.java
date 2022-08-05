@@ -1,0 +1,214 @@
+package dk.jarry.kafkamod;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.errors.TopicExistsException;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mojang.logging.LogUtils;
+
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentContents;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.InterModComms;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
+import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+
+// The value here should match an entry in the META-INF/mods.toml file
+@Mod("kafkamod")
+public class KafkaMod {
+
+    // Directly reference a slf4j logger
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    public KafkaMod() {
+        // Register the setup method for modloading
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
+        // Register the enqueueIMC method for modloading
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::enqueueIMC);
+        // Register the processIMC method for modloading
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::processIMC);
+
+        // Register ourselves for server and other game events we are interested in
+        MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    private void setup(final FMLCommonSetupEvent event) {
+    }
+
+    private void enqueueIMC(final InterModEnqueueEvent event) {
+        // Some example code to dispatch IMC to another mod
+        InterModComms.sendTo("kafkamod", "helloworld", () -> {
+            LOGGER.info("Hello world from the MDK");
+            return "Hello world";
+        });
+    }
+
+    private void processIMC(final InterModProcessEvent event) {
+        // Some example code to receive and process InterModComms from other mods
+        LOGGER.info("Got IMC {}", event.getIMCStream().
+                map(m -> m.messageSupplier().get()).
+                collect(Collectors.toList()));
+    }
+
+    // You can use SubscribeEvent and let the Event Bus discover methods to call
+    @SubscribeEvent
+    public void onServerStarting(ServerStartingEvent event) {
+
+        // Do something when the server starts
+        LOGGER.info(KafkaMod.class.getSimpleName() + " - HELLO from server starting");
+
+        Properties props = new Properties();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class.getName());
+        createTopic(topic, props);
+        producer = new KafkaProducer<String, JsonNode>(props);
+
+    }
+
+    final String topic = "kafka-mod-chat";
+    Producer<String, JsonNode> producer;
+    final ObjectMapper objectMapper = new ObjectMapper();
+
+    public static void createTopic(final String topic, final Properties config) {
+        final NewTopic newTopic = new NewTopic(topic, Optional.empty(), Optional.empty());
+        try (final AdminClient adminClient = AdminClient.create(config)) {
+            adminClient.createTopics(Collections.singletonList(newTopic)).all().get();
+        } catch (final InterruptedException | ExecutionException e) {
+            // Ignore if TopicExistsException, which may be valid if topic exists
+            if (!(e.getCause() instanceof TopicExistsException)) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onChat(net.minecraftforge.event.ServerChatEvent event){
+
+        ServerPlayer player = event.getPlayer();
+        String message = event.getMessage();
+        String username = event.getUsername();
+
+        LOGGER.info("Player : " + player + " - Message : " + message + " - Username : " + username);
+
+        if ("My location".equals(message)){
+            String reply = "Your location is x=" + player.getX() + " y=" + player.getY() + " z=" + player.getZ();
+            player.displayClientMessage(Component.literal(reply), true);
+        }
+
+        ChatPlayer chatPlayer = new ChatPlayer(player);
+        ChatRecord cr = new ChatRecord(message, username, chatPlayer);
+        String key = username;
+        JsonNode record = objectMapper.valueToTree(cr);
+
+        System.out.printf("Producing record: %s\t%s%n", key, record);
+        producer.send(new ProducerRecord<String, JsonNode>(topic, key, record), new Callback() {
+            @Override
+            public void onCompletion(RecordMetadata m, Exception e) {
+                if (e != null) {
+                    e.printStackTrace();
+                } else {
+                    System.out.printf("Produced record to topic %s partition [%d] @ offset %d%n",
+                        m.topic(),
+                        m.partition(),
+                        m.offset());
+                }
+            }
+        });
+
+    }
+
+    @SubscribeEvent
+    public void onPlayerChangedDimensionEvent(PlayerEvent.PlayerChangedDimensionEvent event) {
+        Player player = event.getEntity();
+        PlayerLocation pl = new PlayerLocation(player);
+        LOGGER.info("ChangedDimension - " + pl);
+
+        playerInGame.values().stream().forEach( p -> {
+            p.displayClientMessage(Component.literal("ChangedDimension of player - " + pl), true);
+        });
+    }
+
+    @SubscribeEvent
+    public void onPlayerRespawnEvent(PlayerEvent.PlayerRespawnEvent event) {
+        Player player = event.getEntity();
+        PlayerLocation pl = new PlayerLocation(player);
+        LOGGER.info("Respawn - " + pl);
+
+        playerInGame.values().stream().forEach( p -> {
+            p.displayClientMessage(Component.literal("Respawn of player - " + pl), true);    
+        });
+    }
+
+    @SubscribeEvent
+    public void onItemPickupEvent(PlayerEvent.ItemPickupEvent event) {
+        Player player = event.getEntity();
+        Component component;
+
+        ItemEntity originalEntity = event.getOriginalEntity();
+        component = originalEntity.getDisplayName();
+        LOGGER.info("Component [DisplayName - ItemEntity] : " + component);
+
+        ItemStack stack = event.getStack();
+        component = stack.getDisplayName();
+        LOGGER.info("Component [DisplayName - ItemStack] : " + component);
+        LOGGER.info("Component [String - ItemStack] : " + component.getString());
+        ComponentContents componentContents =  component.getContents();
+        LOGGER.info("Component [toString - ComponentContents] : " + componentContents);
+
+    }
+
+    @SubscribeEvent
+    public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        Player player = event.getEntity();
+        String stringUUID = player.getStringUUID();
+        playerInGame.put(stringUUID, player);
+
+        LOGGER.info(KafkaMod.class.getSimpleName() + " - Client connected: " + player);
+        player.displayClientMessage(Component.literal("Hello from the " + KafkaMod.class.getSimpleName() + "!"), true);
+
+        // PlayerWrapper playerWrapper = new PlayerWrapper(player);
+
+    }
+
+    Map<String, Player> playerInGame = new ConcurrentHashMap<String, Player>();
+
+    @SubscribeEvent
+    public void onPlayerLoginOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        Player player = event.getEntity();
+        String stringUUID = player.getStringUUID();
+        playerInGame.remove(stringUUID);
+
+        LOGGER.info(KafkaMod.class.getSimpleName() + " - Client disconnected: " + player);
+    }
+
+}

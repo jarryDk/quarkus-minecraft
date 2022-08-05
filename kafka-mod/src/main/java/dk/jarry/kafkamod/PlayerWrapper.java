@@ -1,4 +1,4 @@
-package dk.jarry.quarkusmod;
+package dk.jarry.kafkamod;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -44,7 +44,7 @@ public class PlayerWrapper {
         player.displayClientMessage( Component.literal(message), true);
 
         // https://github.com/xienaoban/minecraft-bole/blob/1d5b8d1de55a3774b237762849644e0d086bc46b/src/main/java/xienaoban/minecraft/bole/core/BoleHandbookItem.java
-        
+
         ItemStack bookStack = getBook();
         player.addItem(bookStack);
 
@@ -65,7 +65,7 @@ public class PlayerWrapper {
     //    world.addFreshEntity(piglin);
 
         Chicken chicken = EntityType.CHICKEN.create(world);
-        chicken.setPos(pos);        
+        chicken.setPos(pos);
         timeComponent = Component.literal(time);
         chicken.setCustomName(timeComponent);
         chicken.setCustomNameVisible(true);

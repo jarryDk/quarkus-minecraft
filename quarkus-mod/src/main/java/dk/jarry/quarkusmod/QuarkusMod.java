@@ -1,6 +1,13 @@
 package dk.jarry.quarkusmod;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+
 import com.mojang.logging.LogUtils;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -14,12 +21,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-
-import org.slf4j.Logger;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.stream.Collectors;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod("quarkusmod")
@@ -57,6 +58,7 @@ public class QuarkusMod {
                 map(m -> m.messageSupplier().get()).
                 collect(Collectors.toList()));
     }
+   
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
@@ -64,15 +66,17 @@ public class QuarkusMod {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");
 
-        ClassLoader cl = ClassLoader.getSystemClassLoader();
+        //ClassLoader cl = ClassLoader.getSystemClassLoader();
+        ClassLoader cl = ClassLoader.getPlatformClassLoader();
 
         // Switch classloaders to the system classloader, rather than the transformer classloader Forge uses for mod loading
         try {
-            Class<?> clazz = cl.loadClass("dk.jarry.quarkusmod.Listener");
+            Class<?> clazz = cl.loadClass(Listener.class.getName());
             clazz.getDeclaredConstructor().newInstance();
         } catch (ClassNotFoundException | InstantiationException | InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
             e.printStackTrace();
         }
+       
     }
 
     @SubscribeEvent
@@ -87,13 +91,12 @@ public class QuarkusMod {
         if ("My location".equals(message)){
             String reply = "Your location is x=" + player.getX() + " y=" + player.getY() + " z=" + player.getZ();
             player.displayClientMessage(Component.literal(reply), true);
-        }
-
+        }       
     }
 
     @SubscribeEvent
     public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        Player player = event.getPlayer();
+        Player player = event.getEntity();
         System.out.println("QUARKCRAFT - Client connected: " + player);
         LOGGER.info("QUARKCRAFT - Client connected: " + player);
         player.displayClientMessage(Component.literal("Hello from the Quarkiverse!"), true);
@@ -103,7 +106,7 @@ public class QuarkusMod {
         // To find the class, we need to use the system classloader rather than the TransformingClassLoader Forge uses for mod loading
         try {
             ClassLoader cl = ClassLoader.getSystemClassLoader();
-            Class<?> clazz = cl.loadClass("dk.jarry.quarkusmod.Endpoint");
+            Class<?> clazz = cl.loadClass(Endpoint.class.getName());
             // The signature needs to be an Object because Player would be in a different classloader
             Method m = clazz.getMethod("setPlayer", Object.class);
             // Rather inelegant static communication, but it does the job
@@ -116,7 +119,7 @@ public class QuarkusMod {
 
     @SubscribeEvent
     public void onPlayerLoginOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        Player player = event.getPlayer();
+        Player player = event.getEntity();
         System.out.println("QUARKCRAFT - Client disconnected: " + player);
         LOGGER.info("QUARKCRAFT - Client disconnected: " + player);
     }

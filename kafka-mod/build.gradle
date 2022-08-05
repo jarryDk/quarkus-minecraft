@@ -4,9 +4,9 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.1.+'
 }
 
-version = '1.1'
-group = 'dk.jarry.quarkus' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = 'quarkus'
+version = '0.1'
+group = 'dk.jarry.minecraft' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = 'kafka'
 
 // Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -50,10 +50,10 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            property 'forge.enabledGameTestNamespaces', 'examplemod'
+            property 'forge.enabledGameTestNamespaces', 'kafkamod'
 
             mods {
-                examplemod {
+                kafkamod {
                     source sourceSets.main
                 }
             }
@@ -63,9 +63,9 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-            property 'forge.enabledGameTestNamespaces', 'examplemod'
+            property 'forge.enabledGameTestNamespaces', 'kafkamod'
             mods {
-                examplemod {
+                kafkamod {
                     source sourceSets.main
                 }
             }
@@ -78,9 +78,9 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-            property 'forge.enabledGameTestNamespaces', 'examplemod'
+            property 'forge.enabledGameTestNamespaces', 'kafkamod'
             mods {
-                examplemod {
+                kafkamod {
                     source sourceSets.main
                 }
             }
@@ -91,9 +91,9 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            args '--mod', 'examplemod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            args '--mod', 'kafkamod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
             mods {
-                examplemod {
+                kafkamod {
                     source sourceSets.main
                 }
             }
@@ -125,12 +125,9 @@ dependencies {
     // compileOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}:api") // Adds JEI API as a compile dependency
     // runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}") // Adds the full JEI mod as a runtime dependency
     // implementation fg.deobf("com.tterrag.registrate:Registrate:MC${mc_version}-${registrate_version}") // Adds registrate as a dependency
-    
-    implementation 'javax.ws.rs:javax.ws.rs-api:2.0.1'
-    implementation 'org.jboss.resteasy:resteasy-jaxrs:4.0.0.Beta5'
-    implementation 'org.jboss.resteasy:resteasy-undertow:4.0.0.Beta5'
-    implementation 'javax.servlet:javax.servlet-api:3.0.1'
-    implementation 'io.undertow:undertow-core:2.2.17.Final'
+
+    implementation 'org.apache.kafka:kafka-clients:3.2.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'    
 
     // Examples using mod jars from ./libs
     // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
@@ -144,7 +141,7 @@ dependencies {
 jar {
     manifest {
         attributes([
-                "Specification-Title"     : "quarkusmod",
+                "Specification-Title"     : "kafkamod",
                 "Specification-Vendor"    : "JarryDK",
                 "Specification-Version"   : "1", // We are version 1 of ourselves
                 "Implementation-Title"    : project.name,
