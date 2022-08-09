@@ -1,5 +1,6 @@
 {
     "java.project.sourcePaths": [
         "quarkus-mod-kafka/src/main/java/dk/jarry/minecraft/mod/quarkusmod"
-    ]
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

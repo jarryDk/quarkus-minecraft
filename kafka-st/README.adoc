@@ -42,6 +42,15 @@ bin/kafka-topics.sh \
     --bootstrap-server localhost:9092
 ----
 
+.Delete a topic
+
+[source,bash]
+----
+bin/kafka-topics.sh \
+    --bootstrap-server localhost:9092 \
+    --delete \
+    --topic quarkus-mod-kafka
+----
 
 
 == Links

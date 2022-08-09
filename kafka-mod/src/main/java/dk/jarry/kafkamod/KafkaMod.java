@@ -27,7 +27,6 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
@@ -55,7 +54,6 @@ public class KafkaMod {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::enqueueIMC);
         // Register the processIMC method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::processIMC);
-
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
     }
@@ -78,7 +76,11 @@ public class KafkaMod {
                 collect(Collectors.toList()));
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
+    final String KAFKA_MOD_CHAT = "kafka-mod-chat";
+    final String KAFKA_MOD_ITEM_STACK = "kafka-mod-item-stack";
+    Producer<String, JsonNode> producer;
+    final ObjectMapper objectMapper = new ObjectMapper();
+
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
 
@@ -90,14 +92,11 @@ public class KafkaMod {
         props.put(ProducerConfig.ACKS_CONFIG, "all");
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class.getName());
-        createTopic(topic, props);
+        createTopic(KAFKA_MOD_CHAT, props);
+        createTopic(KAFKA_MOD_ITEM_STACK, props);
         producer = new KafkaProducer<String, JsonNode>(props);
 
     }
-
-    final String topic = "kafka-mod-chat";
-    Producer<String, JsonNode> producer;
-    final ObjectMapper objectMapper = new ObjectMapper();
 
     public static void createTopic(final String topic, final Properties config) {
         final NewTopic newTopic = new NewTopic(topic, Optional.empty(), Optional.empty());
@@ -125,13 +124,13 @@ public class KafkaMod {
             player.displayClientMessage(Component.literal(reply), true);
         }
 
-        ChatPlayer chatPlayer = new ChatPlayer(player);
-        ChatRecord cr = new ChatRecord(message, username, chatPlayer);
+        KafkaModPlayer kmPlayer = new KafkaModPlayer(player);
+        ChatRecord cr = new ChatRecord(message, username, kmPlayer);
         String key = username;
         JsonNode record = objectMapper.valueToTree(cr);
 
         System.out.printf("Producing record: %s\t%s%n", key, record);
-        producer.send(new ProducerRecord<String, JsonNode>(topic, key, record), new Callback() {
+        producer.send(new ProducerRecord<String, JsonNode>(KAFKA_MOD_CHAT, key, record), new Callback() {
             @Override
             public void onCompletion(RecordMetadata m, Exception e) {
                 if (e != null) {
@@ -150,7 +149,7 @@ public class KafkaMod {
     @SubscribeEvent
     public void onPlayerChangedDimensionEvent(PlayerEvent.PlayerChangedDimensionEvent event) {
         Player player = event.getEntity();
-        PlayerLocation pl = new PlayerLocation(player);
+        KafkaModPlayer pl = new KafkaModPlayer(player);
         LOGGER.info("ChangedDimension - " + pl);
 
         playerInGame.values().stream().forEach( p -> {
@@ -161,30 +160,69 @@ public class KafkaMod {
     @SubscribeEvent
     public void onPlayerRespawnEvent(PlayerEvent.PlayerRespawnEvent event) {
         Player player = event.getEntity();
-        PlayerLocation pl = new PlayerLocation(player);
+        KafkaModPlayer pl = new KafkaModPlayer(player);
         LOGGER.info("Respawn - " + pl);
 
         playerInGame.values().stream().forEach( p -> {
-            p.displayClientMessage(Component.literal("Respawn of player - " + pl), true);    
+            p.displayClientMessage(Component.literal("Respawn of player - " + pl), true);
         });
     }
 
     @SubscribeEvent
     public void onItemPickupEvent(PlayerEvent.ItemPickupEvent event) {
         Player player = event.getEntity();
-        Component component;
-
-        ItemEntity originalEntity = event.getOriginalEntity();
-        component = originalEntity.getDisplayName();
-        LOGGER.info("Component [DisplayName - ItemEntity] : " + component);
+        KafkaModPlayer kmPlayer = new KafkaModPlayer(player);
 
         ItemStack stack = event.getStack();
-        component = stack.getDisplayName();
-        LOGGER.info("Component [DisplayName - ItemStack] : " + component);
-        LOGGER.info("Component [String - ItemStack] : " + component.getString());
-        ComponentContents componentContents =  component.getContents();
-        LOGGER.info("Component [toString - ComponentContents] : " + componentContents);
+        LOGGER.info("Component Pickup : " + stack.getDisplayName().getString());
 
+        ItemStackRecord cr = new ItemStackRecord(kmPlayer, "Pickup", stack);
+        String key = kmPlayer.getName();
+        JsonNode record = objectMapper.valueToTree(cr);
+
+        System.out.printf("Producing record: %s\t%s%n", key, record);
+        producer.send(new ProducerRecord<String, JsonNode>(KAFKA_MOD_ITEM_STACK, key, record), new Callback() {
+            @Override
+            public void onCompletion(RecordMetadata m, Exception e) {
+                if (e != null) {
+                    e.printStackTrace();
+                } else {
+                    System.out.printf("Produced record to topic %s partition [%d] @ offset %d%n",
+                        m.topic(),
+                        m.partition(),
+                        m.offset());
+                }
+            }
+        });
+
+    }
+
+    @SubscribeEvent
+    public void onItemCraftedEvent(PlayerEvent.ItemCraftedEvent event) {
+        Player player = event.getEntity();
+        KafkaModPlayer kmPlayer = new KafkaModPlayer(player);
+
+        ItemStack stack = event.getCrafting();
+        LOGGER.info("Component Crafted : " + stack.getDisplayName().getString());
+
+        ItemStackRecord cr = new ItemStackRecord(kmPlayer, "Crafted", stack);
+        String key = kmPlayer.getName();
+        JsonNode record = objectMapper.valueToTree(cr);
+
+        System.out.printf("Producing record: %s\t%s%n", key, record);
+        producer.send(new ProducerRecord<String, JsonNode>(KAFKA_MOD_ITEM_STACK, key, record), new Callback() {
+            @Override
+            public void onCompletion(RecordMetadata m, Exception e) {
+                if (e != null) {
+                    e.printStackTrace();
+                } else {
+                    System.out.printf("Produced record to topic %s partition [%d] @ offset %d%n",
+                        m.topic(),
+                        m.partition(),
+                        m.offset());
+                }
+            }
+        });
     }
 
     @SubscribeEvent
