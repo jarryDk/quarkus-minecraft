@@ -1,10 +1,12 @@
-# Quarkus Minecraft
+= Quarkus Minecraft
 
 Great inspiration taken from https://github.com/holly-cummins/quarkus-minecraft-observability-extension
 
-## quarkus-minecraft-extension
+== quarkus-minecraft-extension
 
 The extension `quarkus-minecraft-extension` will add more loggers to our app and hook into places where the annotaion `javax.ws.rs.GET` is used.
+
+
 
 .Create the Quarkus extension from scratch
 
@@ -30,7 +32,11 @@ mvn install
     └── pom.xml
 ----
 
-## quarkus-minecraft-app
+=== Link
+
+https://quarkus.io/guides/extension-codestart[Extension codestart - Quarkus]
+
+== quarkus-minecraft-app
 
 .Create the Quarkus app from scratch
 
@@ -76,13 +82,13 @@ Look in
 - quarkus-minecraft-app/target/quarkus-app/quarkus/generated-bytecode.jar
 
 
-## quarkus-mod
+== quarkus-mod
 
 The `quarkusmod` will add an `UndertowJaxrsServer` to the Minecraft server and listen to port 8081.
 
 We will use port 8081 to sendt reqest from our Quarkus app to MineCraft.
 
-### Start the Minecraft server
+=== Start the Minecraft server
 
 [source,bash]
 ----
@@ -93,7 +99,7 @@ cd quarkus-mod
 [TIP]
 First time you start the Mincraft server you will have to accept the eula by changing eula=false to eula=true in the file `modded-minecraft/run/eula.txt`
 
-## Minecraft client
+== Minecraft client
 
 You will need the Java edition of Minecraft. Start a multiplayer game, and connect to `http://localhost:25565`.
 
@@ -107,7 +113,7 @@ pauseOnLostFocus:false
 ----
 
 
-## Util
+== Util
 
 .Who is blocking port 8080
 

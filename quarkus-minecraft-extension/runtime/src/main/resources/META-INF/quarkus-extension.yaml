@@ -1,9 +1,13 @@
 name: Quarkus Minecraft Extension
-#description: Quarkus Minecraft Extension ...
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
 metadata:
-#  keywords:
-#    - quarkus-minecraft-extension
-#  guide: ...
-#  categories:
-#    - "miscellaneous"
-#  status: "preview"
+  short-name: "minecraft"
+  keywords:
+  - "jaxrs"
+  - "web"
+  - "rest"
+  status: "preview"
+  extension-dependencies:
+  - "io.quarkus:quarkus-arc"
+  - "quarkus-resteasy-reactive"
+description: "Add observability to JAXRS and communicate with Minecraft"

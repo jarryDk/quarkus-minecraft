@@ -25,5 +25,5 @@ public class MinecraftLogHandler extends Handler {
     @Override
     public void close() throws SecurityException {
     }
-    
+
 }
