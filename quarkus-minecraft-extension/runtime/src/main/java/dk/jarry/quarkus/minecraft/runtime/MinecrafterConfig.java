@@ -12,6 +12,6 @@ public class MinecrafterConfig {
      */
     @ConfigItem(defaultValue = "http://localhost:8081/observability/")
     public String baseURL;
-    
+
 }
 

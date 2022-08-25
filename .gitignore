@@ -29,5 +29,3 @@ quarkus-mod/bin
 .classpath
 .project
 .settings*
-kafka-mod/bin/*
-

@@ -8,16 +8,11 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.WrittenBookItem;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -43,10 +38,7 @@ public class PlayerWrapper {
 
         player.displayClientMessage( Component.literal(message), true);
 
-        // https://github.com/xienaoban/minecraft-bole/blob/1d5b8d1de55a3774b237762849644e0d086bc46b/src/main/java/xienaoban/minecraft/bole/core/BoleHandbookItem.java
-        
-        ItemStack bookStack = getBook();
-        player.addItem(bookStack);
+        player.displayClientMessage( Component.literal(message), true);
 
         Level world = player.getCommandSenderWorld();
 
@@ -55,18 +47,10 @@ public class PlayerWrapper {
         lightning.setVisualOnly(true);
         world.addFreshEntity(lightning);
 
+        Chicken chicken = EntityType.CHICKEN.create(world);
+        chicken.setPos(pos);
         String time = DATE_FORMAT.format(new Date());
         Component timeComponent = Component.literal(time);
-
-    //    Piglin piglin = EntityType.PIGLIN.create(world);
-    //    piglin.setPos(pos);
-    //    piglin.setCustomName(timeComponent);
-    //    piglin.setCustomNameVisible(true);
-    //    world.addFreshEntity(piglin);
-
-        Chicken chicken = EntityType.CHICKEN.create(world);
-        chicken.setPos(pos);        
-        timeComponent = Component.literal(time);
         chicken.setCustomName(timeComponent);
         chicken.setCustomNameVisible(true);
         world.addFreshEntity(chicken);
@@ -86,7 +70,6 @@ public class PlayerWrapper {
         chicken.setPos(getPositionInFrontOfPlayer(6));
         level.addFreshEntity(chicken);
 
-        Vec3 blockPos = chicken.getPosition(45);
         List<BlockPos> affectedPositions = new ArrayList<>();
         affectedPositions.add(new BlockPos(chicken.getX(), chicken.getY(),
                 chicken.getZ()));
@@ -105,18 +88,4 @@ public class PlayerWrapper {
         return pos;
     }
 
-    private ItemStack getBook(){
-
-        ItemStack bookStack = new ItemStack(Items.WRITABLE_BOOK);
-
-        CompoundTag tag = bookStack.getOrCreateTag();
-        tag.putString(WrittenBookItem.TAG_AUTHOR, "jarry_dk");
-        tag.putString(WrittenBookItem.TAG_TITLE, "Title by JarryDK");
-        ListTag pages = tag.getList("pages", 8);
-        tag.put(WrittenBookItem.TAG_PAGES, pages);
-    
-        return bookStack;
-    }
-
-    
 }

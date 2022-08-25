@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 @MinecraftLog
 @Interceptor
 public class MinecraftLogInterceptor {
-    
+
     private final MinecraftService minecraft;
 
     public MinecraftLogInterceptor(MinecraftService minecraft) {

@@ -8,6 +8,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class RestExceptionMapper
         implements ExceptionMapper<Exception> {
+
     @Context
     private MinecraftService minecraft;
 
@@ -16,6 +17,6 @@ public class RestExceptionMapper
         minecraft.boom();
         // We lose some detail about the exceptions here, especially for 404, but we will live with that
         return Response.serverError().build();
-
     }
+    
 }

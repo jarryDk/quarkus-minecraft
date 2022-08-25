@@ -4,7 +4,7 @@ import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
 public class MinecraftLogHandler extends Handler {
-    
+
     private final MinecraftService minecraft;
 
     public MinecraftLogHandler(MinecraftService minecraft) {
@@ -25,4 +25,5 @@ public class MinecraftLogHandler extends Handler {
     @Override
     public void close() throws SecurityException {
     }
+    
 }

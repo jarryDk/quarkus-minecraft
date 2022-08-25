@@ -4,6 +4,8 @@ Great inspiration taken from https://github.com/holly-cummins/quarkus-minecraft-
 
 ## quarkus-minecraft-extension
 
+The extension `quarkus-minecraft-extension` will add more loggers to our app and hook into places where the annotaion `javax.ws.rs.GET` is used.
+
 .Create the Quarkus extension from scratch
 
 [source,bash]
@@ -19,13 +21,22 @@ cd quarkus-minecraft-extension
 mvn install
 ----
 
+.Structure in the extension
+----
+└─── quarkus-minecraft-extension
+    ├── deployment
+    ├── runtime
+    ├── integration-tests
+    └── pom.xml
+----
+
 ## quarkus-minecraft-app
 
 .Create the Quarkus app from scratch
 
 [source,bash]
 ----
-mvn io.quarkus:quarkus-maven-plugin:2.10.0.Final:create \
+mvn io.quarkus:quarkus-maven-plugin:2.11.3.Final:create \
     -DprojectGroupId=dk.jarry \
     -DprojectArtifactId=quarkus-minecraft-app \
     -DclassName="dk.jarry.minecraft.todo.boundary.ToDoResource" \
@@ -49,10 +60,27 @@ Add this dependency to `quarkus-minecraft-app/pom.xml`
 [source,bash]
 ----
 cd quarkus-minecraft-app
-
+mvn compile quarkus:dev
 ----
 
+.Have a look into the bytecode
+
+[source,bash]
+----
+bytecode-viewer
+----
+
+Look in
+
+- quarkus-minecraft-app/target/quarkus-app/app/quarkus-minecraft-app-1.0.0-SNAPSHOT.jar
+- quarkus-minecraft-app/target/quarkus-app/quarkus/generated-bytecode.jar
+
+
 ## quarkus-mod
+
+The `quarkusmod` will add an `UndertowJaxrsServer` to the Minecraft server and listen to port 8081.
+
+We will use port 8081 to sendt reqest from our Quarkus app to MineCraft.
 
 ### Start the Minecraft server
 

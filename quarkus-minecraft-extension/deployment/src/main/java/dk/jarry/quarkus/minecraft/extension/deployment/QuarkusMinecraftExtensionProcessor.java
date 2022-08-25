@@ -77,4 +77,5 @@ class QuarkusMinecraftExtensionProcessor {
         return new ExceptionMapperBuildItem(RestExceptionMapper.class.getName(),
                 Exception.class.getName(), Priorities.USER + 100, true);
     }
+
 }

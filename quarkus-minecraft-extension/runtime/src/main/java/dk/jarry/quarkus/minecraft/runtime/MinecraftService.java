@@ -28,9 +28,12 @@ public class MinecraftService {
 
     public void log(String message) {
         try {
-            client.target(minecrafterConfig.baseURL).path("log")
-                    .request(MediaType.TEXT_PLAIN).post(Entity.text(message));
-            // Don't log anything back about the response or it ends up with too much circular logging
+            client.target(minecrafterConfig.baseURL)
+                    .path("log")
+                    .request(MediaType.TEXT_PLAIN)
+                    .post(Entity.text(message));
+            // Don't log anything back about the response or it ends up with too much
+            // circular logging
         } catch (Throwable e) {
             System.out.println("\uD83D\uDDE1️ [Minecrafter] Connection error: " + e);
         }
@@ -38,7 +41,8 @@ public class MinecraftService {
 
     private void invokeMinecraft(String path) {
         try {
-            String response = client.target(minecrafterConfig.baseURL).path(path)
+            String response = client.target(minecrafterConfig.baseURL)
+                    .path(path)
                     .request(MediaType.TEXT_PLAIN)
                     .get(String.class);
 
